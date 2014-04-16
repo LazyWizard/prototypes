@@ -1,9 +1,11 @@
 package org.lazywizard.localmp;
 
 import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.combat.CombatEngineAPI;
 import com.fs.starfarer.api.combat.ShipAIPlugin;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.combat.ShipCommand;
+import com.fs.starfarer.api.combat.ViewportAPI;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +15,7 @@ import org.lazywizard.localmp.buttonmaps.Xbox360;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Controller;
 import org.lwjgl.input.Controllers;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.util.vector.Vector2f;
 
 // TODO: Rewrite to use new (LWJGL 2.9.1) input events system in Controllers
@@ -151,14 +154,26 @@ public class JoypadController implements ShipAIPlugin
     @Override
     public void advance(float amount)
     {
-        if (controller == null || ship == null
-                || !Global.getCombatEngine().isEntityInPlay(ship))
+        CombatEngineAPI engine = Global.getCombatEngine();
+
+        if (engine == null || controller == null || ship == null
+                || !engine.isEntityInPlay(ship))
         {
             return;
         }
 
+        // Update camera to focus on both ships
         Vector2f shipLoc = ship.getLocation();
+        ViewportAPI view = engine.getViewport();
+        Vector2f cameraLoc = (ship == engine.getPlayerShip() ? shipLoc
+                : MathUtils.getMidpoint(shipLoc, engine.getPlayerShip().getLocation()));
+        int camX = (int) view.convertWorldXtoScreenX(cameraLoc.x),
+                camY = (int) view.convertWorldYtoScreenY(cameraLoc.y);
+        //System.out.println("Camera loc: " + cameraLoc);
+        //System.out.println("New mouse coords: " + camX + ", " + camY);
+        Mouse.setCursorPosition(camX, camY);
 
+        // Update controller input
         controller.poll();
 
         // Axis handling, Y-axis will be flipped
@@ -212,9 +227,8 @@ public class JoypadController implements ShipAIPlugin
 
         // Show virtual mouse location on the screen
         ship.getMouseTarget().set(mouseLoc);
-        Global.getCombatEngine().addSmoothParticle(mouseLoc,
-                ship.getVelocity(), 5f * Global.getCombatEngine().getViewport()
-                .getViewMult(), 1f, .25f, Color.CYAN);
+        engine.addSmoothParticle(mouseLoc, ship.getVelocity(),
+                5f * view.getViewMult(), 1f, .25f, Color.CYAN);
 
         // Button handling
         for (Map.Entry<Integer, Enum> binding : BINDINGS.entrySet())
