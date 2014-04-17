@@ -1,5 +1,7 @@
-package org.lazywizard.localmp.buttonmaps;
+package org.lazywizard.localmp.controllers;
 
+import com.fs.starfarer.api.Global;
+import org.apache.log4j.Level;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Controller;
 import org.lwjgl.input.Controllers;
@@ -23,15 +25,60 @@ public class Xbox360
     public static final int AXIS_RIGHT_X = 3;
     public static final int AXIS_TRIGGER = 4;
 
+    public static Controller findValid360Controller()
+    {
+        if (!Controllers.isCreated())
+        {
+            try
+            {
+                Global.getLogger(Xbox360.class).log(Level.INFO,
+                        "Initializing controllers...");
+                Controllers.create();
+            }
+            catch (LWJGLException ex)
+            {
+                throw new RuntimeException("Failed to initiate controllers!", ex);
+            }
+        }
+
+        // Search for Xbox 360 controllers
+        // TODO: Extend this to all valid joypad controllers
+        // Needs 10 buttons and 3 axis to be compatible
+        for (int x = 0; x < Controllers.getControllerCount(); x++)
+        {
+            Controller tmp = Controllers.getController(x);
+            if (tmp.getName().contains("360"))
+            {
+                Global.getLogger(Xbox360.class).log(Level.INFO,
+                        "Found valid 360 controller: " + tmp.getName());
+
+                // Set controller deadzones
+                for (int y = 0; y < tmp.getAxisCount(); y++)
+                {
+                    tmp.setDeadZone(y, .1f);
+                }
+
+                return tmp;
+            }
+        }
+
+        // No controller found
+        Global.getLogger(Xbox360.class).log(Level.ERROR,
+                "Failed to find a compatible 360 controller!");
+        return null;
+    }
+
     private Xbox360()
     {
     }
 
+    // Used to fine-tune button mappings and deadzones
     public static void main(String[] args)
     {
         try
         {
             Controllers.create();
+            Controllers.clearEvents();
         }
         catch (LWJGLException ex)
         {
@@ -40,27 +87,8 @@ public class Xbox360
             return;
         }
 
-        if (Controllers.getControllerCount() == 0)
-        {
-            System.out.println("No controllers found!");
-            return;
-        }
-
-        Controller controller = null;
-        boolean foundController = false;
-        for (int x = 0; x < Controllers.getControllerCount(); x++)
-        {
-            controller = Controllers.getController(x);
-            String name = controller.getName();
-            System.out.println("Controller " + x + ": " + name);
-            if (name.contains("360"))
-            {
-                foundController = true;
-                break;
-            }
-        }
-
-        if (foundController)
+        Controller controller = findValid360Controller();
+        if (controller != null)
         {
             System.out.println("\nFound Xbox 360 controller: "
                     + controller.getName());
@@ -81,7 +109,7 @@ public class Xbox360
                 // Detect axis usage
                 for (int x = 0; x < controller.getAxisCount(); x++)
                 {
-                    if (controller.getAxisValue(x) > controller.getDeadZone(x))
+                    if (Math.abs(controller.getAxisValue(x)) > controller.getDeadZone(x))
                     {
                         System.out.println("Axis: " + x + " )"
                                 + controller.getAxisName(x) + ") = "
@@ -89,11 +117,16 @@ public class Xbox360
                     }
                 }
 
-                //System.out.println(controller.getPovX() + ", " + controller.getPovY());
+                float povX = controller.getPovX(), povY = controller.getPovY();
+                if (povX != 0f || povY != 0f)
+                {
+                    System.out.println("D-pad: " + povX + ", " + povY);
+                }
 
+                //System.out.println(controller.getPovX() + ", " + controller.getPovY());
                 try
                 {
-                    Thread.sleep(1000l / 4l);
+                    Thread.sleep(1000l / 8l);
                 }
                 catch (InterruptedException ex)
                 {
