@@ -1,6 +1,10 @@
 package org.lazywizard.localmp.controllers;
 
 import com.fs.starfarer.api.Global;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.log4j.Level;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Controller;
@@ -68,8 +72,139 @@ public class Xbox360
         return null;
     }
 
+    public static Map<Controller, List<JoypadInputEvent>> pollEvents()
+    {
+        Map<Controller, List<JoypadInputEvent>> allEvents = new HashMap<>();
+
+        Controllers.clearEvents();
+        Controllers.poll();
+
+        while (Controllers.next())
+        {
+            Controller source = Controllers.getEventSource();
+            List<JoypadInputEvent> events;
+            if (!allEvents.containsKey(source))
+            {
+                events = new ArrayList<>();
+                allEvents.put(source, events);
+            }
+            else
+            {
+                events = allEvents.get(source);
+            }
+
+            // The constructor handles gathering the event details
+            events.add(new Xbox360InputEvent());
+        }
+
+        return allEvents;
+    }
+
     private Xbox360()
     {
+    }
+
+    private static class Xbox360InputEvent implements JoypadInputEvent
+    {
+        private final Controller controller;
+        private final long nanoDuration;
+        private final boolean isAxisEvent, isDPadEvent, isButtonEvent, buttonState;
+        private final int axisIndex, buttonIndex;
+        private final float axisX, axisY, dpadX, dpadY;
+
+        private Xbox360InputEvent()
+        {
+            this.controller = Controllers.getEventSource();
+            this.nanoDuration = Controllers.getEventNanoseconds();
+            this.isAxisEvent = Controllers.isEventAxis();
+            this.isDPadEvent = Controllers.isEventPovX() || Controllers.isEventPovY();
+            this.isButtonEvent = Controllers.isEventButton();
+            this.buttonState = Controllers.getEventButtonState();
+            this.axisIndex = (isAxisEvent ? Controllers.getEventControlIndex() : -1);
+            this.buttonIndex = (isButtonEvent ? Controllers.getEventControlIndex() : -1);
+            this.axisX = (isAxisEvent ? Controllers.getEventXAxisValue() : 0f);
+            this.axisY = (isAxisEvent ? Controllers.getEventYAxisValue() : 0f);
+            this.dpadX = (isDPadEvent ? Controllers.getEventXAxisValue() : 0f);
+            this.dpadY = (isDPadEvent ? Controllers.getEventYAxisValue() : 0f);
+        }
+
+        @Override
+        public Controller getController()
+        {
+            return controller;
+        }
+
+        @Override
+        public long getEventNanoDuration()
+        {
+            return nanoDuration;
+        }
+
+        @Override
+        public boolean isAxisEvent()
+        {
+            return isAxisEvent;
+        }
+
+        @Override
+        public int getAxisNumber()
+        {
+            return axisIndex;
+        }
+
+        @Override
+        public float getAxisX()
+        {
+            return axisX;
+        }
+
+        @Override
+        public float getAxisY()
+        {
+            return axisY;
+        }
+
+        @Override
+        public boolean isDPadEvent()
+        {
+            return isDPadEvent;
+        }
+
+        @Override
+        public float getDPadX()
+        {
+            return dpadX;
+        }
+
+        @Override
+        public float getDPadY()
+        {
+            return dpadY;
+        }
+
+        @Override
+        public boolean isButtonEvent()
+        {
+            return isButtonEvent;
+        }
+
+        @Override
+        public boolean isButtonDownEvent()
+        {
+            return buttonState;
+        }
+
+        @Override
+        public boolean isButtonUpEvent()
+        {
+            return !buttonState;
+        }
+
+        @Override
+        public int getButton()
+        {
+            return buttonIndex;
+        }
     }
 
     // Used to fine-tune button mappings and deadzones

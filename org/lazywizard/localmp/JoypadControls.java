@@ -186,6 +186,7 @@ public class JoypadControls implements ShipAIPlugin
                         intendedFacing);
 
                 // Stop turning if turn velocity is more than remaining turn
+                // TODO: This is written wrong, fix it
                 if (Math.abs(turnAmount) > ship.getAngularVelocity())
                 {
                     runCommand(turnAmount > 0f ? ShipCommand.TURN_LEFT : ShipCommand.TURN_RIGHT);
