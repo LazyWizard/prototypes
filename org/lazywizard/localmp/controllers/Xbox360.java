@@ -81,6 +81,13 @@ public class Xbox360
 
         while (Controllers.next())
         {
+            // The constructor handles gathering the event details
+            Xbox360InputEvent tmp = new Xbox360InputEvent();
+            if (!tmp.isValidEvent())
+            {
+                continue;
+            }
+
             Controller source = Controllers.getEventSource();
             List<JoypadInputEvent> events;
             if (!allEvents.containsKey(source))
@@ -93,8 +100,7 @@ public class Xbox360
                 events = allEvents.get(source);
             }
 
-            // The constructor handles gathering the event details
-            events.add(new Xbox360InputEvent());
+            events.add(tmp);
         }
 
         return allEvents;
@@ -104,24 +110,41 @@ public class Xbox360
     {
     }
 
+    // TODO: Throw exception when acting on consumed events
     private static class Xbox360InputEvent implements JoypadInputEvent
     {
         private final Controller controller;
         private final long nanoDuration;
-        private final boolean isAxisEvent, isDPadEvent, isButtonEvent, buttonState;
+        private final boolean isAxisEvent, isDeadZoneEvent, isDPadEvent,
+                isButtonEvent, buttonState;
         private final int axisIndex, buttonIndex;
         private final float axisX, axisY, dpadX, dpadY;
+        private boolean isConsumed = false;
 
+        private static boolean isInDeadZone(int axis, float x, float y, Controller controller)
+        {
+            float deadZone = controller.getDeadZone(axis);
+            return (Math.abs(x) <= deadZone) && (Math.abs(y) <= deadZone);
+        }
+
+        // FIXME: Non-left axis events aren't being registered
         private Xbox360InputEvent()
         {
             this.controller = Controllers.getEventSource();
             this.nanoDuration = Controllers.getEventNanoseconds();
+
             this.isAxisEvent = Controllers.isEventAxis();
             this.isDPadEvent = Controllers.isEventPovX() || Controllers.isEventPovY();
             this.isButtonEvent = Controllers.isEventButton();
-            this.buttonState = Controllers.getEventButtonState();
+
+            this.isDeadZoneEvent = (isAxisEvent || isDPadEvent) && isInDeadZone(
+                    Controllers.getEventControlIndex(), Controllers.getEventXAxisValue(),
+                    Controllers.getEventYAxisValue(), controller);
+
             this.axisIndex = (isAxisEvent ? Controllers.getEventControlIndex() : -1);
             this.buttonIndex = (isButtonEvent ? Controllers.getEventControlIndex() : -1);
+            this.buttonState = Controllers.getEventButtonState();
+
             this.axisX = (isAxisEvent ? Controllers.getEventXAxisValue() : 0f);
             this.axisY = (isAxisEvent ? Controllers.getEventYAxisValue() : 0f);
             this.dpadX = (isDPadEvent ? Controllers.getEventXAxisValue() : 0f);
@@ -144,6 +167,12 @@ public class Xbox360
         public boolean isAxisEvent()
         {
             return isAxisEvent;
+        }
+
+        @Override
+        public boolean isDeadZoneEvent()
+        {
+            return isDeadZoneEvent;
         }
 
         @Override
@@ -205,6 +234,51 @@ public class Xbox360
         {
             return buttonIndex;
         }
+
+        @Override
+        public void consume()
+        {
+            isConsumed = true;
+        }
+
+        @Override
+        public boolean isConsumed()
+        {
+            return isConsumed;
+        }
+
+        private boolean isValidEvent()
+        {
+            return !isDeadZoneEvent && (isAxisEvent || isButtonEvent || isDPadEvent);
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder toString = new StringBuilder();
+            if (this.isAxisEvent())
+            {
+                toString.append("Axis " + this.getAxisNumber() + ": "
+                        + this.getAxisX() + ", " + this.getAxisY() + "\n");
+                toString.append("Deadzone: " + this.isDeadZoneEvent() + "\n");
+            }
+
+            if (this.isDPadEvent())
+            {
+                toString.append("DPad " + this.getDPadX() + ", "
+                        + this.getDPadY() + "\n");
+            }
+
+            if (this.isButtonEvent())
+            {
+                toString.append("Button " + this.getButton()
+                        + (this.isButtonDownEvent() ? " down" : " up") + "\n");
+            }
+
+            toString.append("Consumed: " + this.isConsumed() + "\n");
+
+            return toString.toString();
+        }
     }
 
     // Used to fine-tune button mappings and deadzones
@@ -229,39 +303,50 @@ public class Xbox360
                     + controller.getName());
             while (true)
             {
-                controller.poll();
+                /*controller.poll();
 
-                // Detect button presses
-                for (int x = 0; x < controller.getButtonCount(); x++)
+                 // Detect button presses
+                 for (int x = 0; x < controller.getButtonCount(); x++)
+                 {
+                 if (controller.isButtonPressed(x))
+                 {
+                 System.out.println("Button down: " + x + " )"
+                 + controller.getButtonName(x) + ")");
+                 }
+                 }
+
+                 // Detect axis usage
+                 for (int x = 0; x < controller.getAxisCount(); x++)
+                 {
+                 if (Math.abs(controller.getAxisValue(x)) > controller.getDeadZone(x))
+                 {
+                 System.out.println("Axis: " + x + " )"
+                 + controller.getAxisName(x) + ") = "
+                 + controller.getAxisValue(x));
+                 }
+                 }
+
+                 float povX = controller.getPovX(), povY = controller.getPovY();
+                 if (povX != 0f || povY != 0f)
+                 {
+                 System.out.println("D-pad: " + povX + ", " + povY);
+                 }*/
+                Map<Controller, List<JoypadInputEvent>> allEvents = Xbox360.pollEvents();
+
+                if (allEvents.containsKey(controller))
                 {
-                    if (controller.isButtonPressed(x))
+                    List<JoypadInputEvent> events = allEvents.get(controller);
+                    //System.out.println("Contains " + events.size() + " events");
+                    for (JoypadInputEvent event : events)
                     {
-                        System.out.println("Button down: " + x + " )"
-                                + controller.getButtonName(x) + ")");
+                        System.out.println(event.toString() + "\n---");
                     }
+                    System.out.println();
                 }
 
-                // Detect axis usage
-                for (int x = 0; x < controller.getAxisCount(); x++)
-                {
-                    if (Math.abs(controller.getAxisValue(x)) > controller.getDeadZone(x))
-                    {
-                        System.out.println("Axis: " + x + " )"
-                                + controller.getAxisName(x) + ") = "
-                                + controller.getAxisValue(x));
-                    }
-                }
-
-                float povX = controller.getPovX(), povY = controller.getPovY();
-                if (povX != 0f || povY != 0f)
-                {
-                    System.out.println("D-pad: " + povX + ", " + povY);
-                }
-
-                //System.out.println(controller.getPovX() + ", " + controller.getPovY());
                 try
                 {
-                    Thread.sleep(1000l / 8l);
+                    Thread.sleep(1000l / 2l);
                 }
                 catch (InterruptedException ex)
                 {

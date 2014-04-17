@@ -8,6 +8,7 @@ public interface JoypadInputEvent
     public long getEventNanoDuration();
 
     public boolean isAxisEvent();
+    public boolean isDeadZoneEvent();
     public int getAxisNumber();
     public float getAxisX();
     public float getAxisY();
@@ -20,4 +21,7 @@ public interface JoypadInputEvent
     public boolean isButtonDownEvent();
     public boolean isButtonUpEvent();
     public int getButton();
+
+    public void consume();
+    public boolean isConsumed();
 }
