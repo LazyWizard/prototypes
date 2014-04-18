@@ -5,13 +5,16 @@ import org.lwjgl.input.Controller;
 public interface JoypadInputEvent
 {
     public Controller getController();
-    public long getEventNanoDuration();
+    public long getEventNanoTime();
 
     public boolean isAxisEvent();
+    public boolean isLAxisEvent();
+    public boolean isRAxisEvent();
+    public boolean isZAxisEvent();
     public boolean isDeadZoneEvent();
-    public int getAxisNumber();
     public float getAxisX();
     public float getAxisY();
+    public float getAxisZ();
 
     public boolean isDPadEvent();
     public float getDPadX();
