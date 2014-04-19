@@ -14,6 +14,22 @@ public class EllipticalOrbit implements OrbitAPI
     private SectorEntityToken entity;
     private float currentAngle;
 
+    /**
+     * Creates an elliptical orbit around a focus object.
+     *
+     * @param focus        What to orbit around.
+     * @param startAngle   The angle (in degrees) that the orbit will begin at.
+     *                     0 degrees = right - this is not relative to
+     *                     {@code orbitAngle}.
+     * @param orbitWidth   The width of the ellipse that makes up the orbital
+     *                     path.
+     * @param orbitHeight  The height of the ellipse that makes up the orbital
+     *                     path.
+     * @param orbitAngle   The angular offset of the ellipse that makes up the
+     *                     orbital path.
+     * @param daysPerOrbit How long it should take for us to make one orbit
+     *                     around {@code focus}.
+     */
     public EllipticalOrbit(SectorEntityToken focus, float startAngle,
             float orbitWidth, float orbitHeight, float orbitAngle, float daysPerOrbit)
     {
@@ -25,15 +41,33 @@ public class EllipticalOrbit implements OrbitAPI
         currentAngle = startAngle;
     }
 
+    /**
+     * Gets the object we are orbiting.
+     *
+     * @return The {@link SectorEntityToken} we are orbiting around.
+     */
     @Override
     public SectorEntityToken getFocus()
     {
         return focus;
     }
 
+    /**
+     * Explicitly sets where along our orbital path we should be.
+     * <p>
+     * @param angle The angle (in degrees) along the orbital path we should be
+     *              moved to.
+     */
     public void setAngle(float angle)
     {
         currentAngle = angle;
+
+        // Don't bother with these calculations if there's no object to move!
+        if (entity == null)
+        {
+            return;
+        }
+
         angle = (float) Math.toRadians(angle);
         float sin = (float) FastTrig.sin(angle),
                 cos = (float) FastTrig.cos(angle);
