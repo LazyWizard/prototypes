@@ -10,7 +10,8 @@ public interface JoypadInputEvent
     public boolean isAxisEvent();
     public boolean isLAxisEvent();
     public boolean isRAxisEvent();
-    public boolean isZAxisEvent();
+    public boolean isLZAxisEvent();
+    public boolean isRZAxisEvent();
     public boolean isDeadZoneEvent();
     public float getAxisX();
     public float getAxisY();

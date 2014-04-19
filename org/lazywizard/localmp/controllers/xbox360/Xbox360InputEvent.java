@@ -20,9 +20,13 @@ public abstract class Xbox360InputEvent implements JoypadInputEvent
             {
                 toString.append("RAxis: ");
             }
-            if (this.isZAxisEvent())
+            if (this.isLZAxisEvent())
             {
-                toString.append("ZAxis: ");
+                toString.append("LZAxis: ");
+            }
+            if (this.isRZAxisEvent())
+            {
+                toString.append("RZAxis: ");
             }
 
             toString.append(this.getAxisX()).append(", ").append(this.getAxisY())
