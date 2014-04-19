@@ -124,7 +124,7 @@ public class Xbox360
 
             events.add(new Xbox360AxisEvent(controller, AxisType.LAXIS));
             events.add(new Xbox360AxisEvent(controller, AxisType.RAXIS));
-            events.add(new Xbox360AxisEvent(controller, AxisType.ZAXIS));
+            events.add(new Xbox360AxisEvent(controller, AxisType.LZAXIS));
             events.add(new Xbox360AxisEvent(controller, AxisType.DPAD));
         }
 

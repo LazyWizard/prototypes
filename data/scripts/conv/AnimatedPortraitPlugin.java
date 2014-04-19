@@ -173,6 +173,8 @@ public class AnimatedPortraitPlugin implements CustomUIPanelPlugin
                     position.getY());
         }
         GL11.glEnd();
+
+        // Draw a bounding box around the background
         GL11.glColor4f(.7f, .7f, .7f, alphaMult);
         GL11.glLineWidth(1f);
         GL11.glBegin(GL11.GL_LINE_LOOP);

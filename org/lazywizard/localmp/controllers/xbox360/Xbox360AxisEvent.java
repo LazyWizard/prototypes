@@ -3,7 +3,7 @@ package org.lazywizard.localmp.controllers.xbox360;
 import org.lwjgl.input.Controller;
 
 // Purpose of this class: LWJGL event system doesn't work with non-L axis,
-// so we need to calculate axis events manually if we want the other 2 + dpad
+// so we need to calculate axis events manually if we want the R/LZ/RZ/dpad
 // TODO: Throw exception when acting on consumed events
 public class Xbox360AxisEvent extends Xbox360InputEvent
 {
@@ -18,7 +18,8 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
     {
         LAXIS,
         RAXIS,
-        ZAXIS,
+        LZAXIS,
+        RZAXIS,
         DPAD
     }
 
@@ -48,13 +49,21 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
                 dpadX = 0;
                 dpadY = 0;
                 break;
-            case ZAXIS:
+            case LZAXIS:
                 axisX = 0f;
                 axisY = 0f;
                 axisZ = controller.getZAxisValue();
                 dpadX = 0f;
                 dpadY = 0f;
                 isDeadZoneEvent = (Math.abs(axisZ) <= controller.getZAxisDeadZone());
+                break;
+            case RZAXIS:
+                axisX = 0f;
+                axisY = 0f;
+                axisZ = controller.getRZAxisValue();
+                dpadX = 0f;
+                dpadY = 0f;
+                isDeadZoneEvent = (Math.abs(axisZ) <= controller.getRZAxisDeadZone());
                 break;
             case DPAD:
                 axisX = 0f;
@@ -105,9 +114,15 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
     }
 
     @Override
-    public boolean isZAxisEvent()
+    public boolean isLZAxisEvent()
     {
-        return (type == AxisType.ZAXIS);
+        return (type == AxisType.LZAXIS);
+    }
+
+    @Override
+    public boolean isRZAxisEvent()
+    {
+        return (type == AxisType.RZAXIS);
     }
 
     @Override

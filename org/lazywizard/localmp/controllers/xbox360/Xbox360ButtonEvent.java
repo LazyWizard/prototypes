@@ -53,7 +53,13 @@ public class Xbox360ButtonEvent extends Xbox360InputEvent
     }
 
     @Override
-    public boolean isZAxisEvent()
+    public boolean isLZAxisEvent()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isRZAxisEvent()
     {
         return false;
     }
