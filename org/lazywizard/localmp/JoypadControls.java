@@ -18,6 +18,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.util.vector.Vector2f;
 
 // TODO: Rewrite to use new (LWJGL 2.9.1) input events system in Controllers
+// TODO: Add support for custom bindings
 // TODO: Use button down/up events instead of per-frame isButtonDown() checks
 // TODO: Add support for d-pad (controller.getPOVX/Y())
 public class JoypadControls implements ShipAIPlugin
