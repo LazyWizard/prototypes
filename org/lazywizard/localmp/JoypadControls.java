@@ -69,6 +69,10 @@ public class JoypadControls implements ShipAIPlugin
                 }
             }
         }
+        else
+        {
+            ship.resetDefaultAI();
+        }
     }
 
     private void runCommand(Enum command)
