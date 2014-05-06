@@ -1,8 +1,6 @@
-package org.lazywizard.localmp.controllers.xbox360;
+package org.lazywizard.localmp.controllers.joypad;
 
-import org.lazywizard.localmp.controllers.JoypadInputEvent;
-
-public abstract class Xbox360InputEvent implements JoypadInputEvent
+abstract class BaseJoypadInputEvent implements JoypadInputEvent
 {
     abstract boolean isValidEvent();
 

@@ -1,10 +1,10 @@
-package org.lazywizard.localmp.controllers.xbox360;
+package org.lazywizard.localmp.controllers.joypad;
 
 import org.lwjgl.input.Controller;
 import org.lwjgl.input.Controllers;
 
 // TODO: Throw exception when acting on consumed events
-public class Xbox360ButtonEvent extends Xbox360InputEvent
+class JoypadButtonEvent extends BaseJoypadInputEvent
 {
     private final Controller controller;
     private final long nanoTime;
@@ -12,7 +12,7 @@ public class Xbox360ButtonEvent extends Xbox360InputEvent
     private final int buttonIndex;
     private boolean isConsumed = false;
 
-    public Xbox360ButtonEvent()
+    JoypadButtonEvent()
     {
         this.controller = Controllers.getEventSource();
         this.nanoTime = Controllers.getEventNanoseconds();

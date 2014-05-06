@@ -1,20 +1,21 @@
-package org.lazywizard.localmp.controllers.xbox360;
+package org.lazywizard.localmp.controllers.joypad;
 
 import org.lwjgl.input.Controller;
 
 // Purpose of this class: LWJGL event system doesn't work with non-L axis,
 // so we need to calculate axis events manually if we want the R/LZ/RZ/dpad
 // TODO: Throw exception when acting on consumed events
-public class Xbox360AxisEvent extends Xbox360InputEvent
+class JoypadAxisEvent extends BaseJoypadInputEvent
 {
     private final Controller controller;
     private final AxisType type;
     private final long nanoTime;
     private final boolean isDeadZoneEvent;
     private final float axisX, axisY, axisZ, dpadX, dpadY;
+    private final boolean isValid;
     private boolean isConsumed = false;
 
-    public enum AxisType
+    enum AxisType
     {
         LAXIS,
         RAXIS,
@@ -23,7 +24,7 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
         DPAD
     }
 
-    public Xbox360AxisEvent(Controller controller, AxisType axis)
+    JoypadAxisEvent(Controller controller, AxisType axis)
     {
         this.controller = controller;
         this.nanoTime = System.nanoTime();
@@ -32,6 +33,7 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
         switch (axis)
         {
             case LAXIS:
+                isValid = controller.getAxisCount() >= 1;
                 axisX = controller.getXAxisValue();
                 axisY = controller.getYAxisValue();
                 axisZ = 0f;
@@ -41,6 +43,7 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
                 dpadY = 0;
                 break;
             case RAXIS:
+                isValid = controller.getAxisCount() >= 3;
                 axisX = controller.getRXAxisValue();
                 axisY = controller.getRYAxisValue();
                 axisZ = 0f;
@@ -50,6 +53,7 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
                 dpadY = 0;
                 break;
             case LZAXIS:
+                isValid = controller.getAxisCount() >= 4;
                 axisX = 0f;
                 axisY = 0f;
                 axisZ = controller.getZAxisValue();
@@ -58,6 +62,7 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
                 isDeadZoneEvent = (Math.abs(axisZ) <= controller.getZAxisDeadZone());
                 break;
             case RZAXIS:
+                isValid = controller.getAxisCount() >= 5;
                 axisX = 0f;
                 axisY = 0f;
                 axisZ = controller.getRZAxisValue();
@@ -66,6 +71,7 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
                 isDeadZoneEvent = (Math.abs(axisZ) <= controller.getRZAxisDeadZone());
                 break;
             case DPAD:
+                isValid = true;
                 axisX = 0f;
                 axisY = 0f;
                 axisZ = 0f;
@@ -74,6 +80,7 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
                 isDeadZoneEvent = (dpadX == 0f) && (dpadY == 0f);
                 break;
             default:
+                isValid = false;
                 axisX = 0f;
                 axisY = 0f;
                 axisZ = 0f;
@@ -206,6 +213,6 @@ public class Xbox360AxisEvent extends Xbox360InputEvent
     @Override
     boolean isValidEvent()
     {
-        return true;
+        return isValid;
     }
 }

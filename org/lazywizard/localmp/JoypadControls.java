@@ -12,7 +12,7 @@ import java.util.Map;
 import org.apache.log4j.Level;
 import org.lazywizard.lazylib.MathUtils;
 import org.lazywizard.lazylib.VectorUtils;
-import org.lazywizard.localmp.controllers.xbox360.Xbox360;
+import org.lazywizard.localmp.controllers.joypad.buttonmaps.Xbox360;
 import org.lwjgl.input.Controller;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.vector.Vector2f;
