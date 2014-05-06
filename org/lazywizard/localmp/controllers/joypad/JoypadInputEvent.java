@@ -1,4 +1,4 @@
-package org.lazywizard.localmp.controllers;
+package org.lazywizard.localmp.controllers.joypad;
 
 import org.lwjgl.input.Controller;
 
