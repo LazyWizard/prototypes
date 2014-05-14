@@ -5,9 +5,12 @@ import com.fs.starfarer.api.combat.CombatEngineAPI;
 import com.fs.starfarer.api.combat.EveryFrameCombatPlugin;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
+import com.fs.starfarer.api.fleet.FleetMemberType;
 import com.fs.starfarer.api.input.InputEventAPI;
+import com.fs.starfarer.api.mission.FleetSide;
 import java.util.List;
 import org.lazywizard.lazylib.combat.CombatUtils;
+import org.lwjgl.util.vector.Vector2f;
 
 public class GetFleetMember implements EveryFrameCombatPlugin
 {
@@ -56,14 +59,14 @@ public class GetFleetMember implements EveryFrameCombatPlugin
             }
             System.out.println("=========\n");
 
-            /*System.out.println("Attempting spawn...");
-             elapsedTime = -99999f;
-             CombatUtils.spawnShipOrWingDirectly("onslaught_Elite", FleetMemberType.SHIP,
-             FleetSide.PLAYER, 9999f, Vector2f.add(engine.getPlayerShip().getLocation(),
-             new Vector2f(-1000f, 0f), null), 180f);
-             CombatUtils.spawnShipOrWingDirectly("paragon_Elite", FleetMemberType.SHIP,
-             FleetSide.ENEMY, .6f, Vector2f.add(engine.getPlayerShip().getLocation(),
-             new Vector2f(1000f, 0f), null), 0f);*/
+            System.out.println("Attempting spawn...");
+            elapsedTime = -99999f;
+            CombatUtils.spawnShipOrWingDirectly("onslaught_Elite", FleetMemberType.SHIP,
+                    FleetSide.PLAYER, 9999f, Vector2f.add(engine.getPlayerShip().getLocation(),
+                            new Vector2f(-1000f, 0f), null), 180f);
+            CombatUtils.spawnShipOrWingDirectly("paragon_Elite", FleetMemberType.SHIP,
+                    FleetSide.ENEMY, .6f, Vector2f.add(engine.getPlayerShip().getLocation(),
+                            new Vector2f(1000f, 0f), null), 0f);
         }
     }
 

@@ -16,10 +16,11 @@ public class JoypadMaster
 
     public static Map<Controller, List<JoypadInputEvent>> pollEvents()
     {
+        // Allow all EveryFrameCombatPlugins to get the same input list each frame
         if (Global.getCombatEngine() != null)
         {
             float curTime = Global.getCombatEngine().getTotalElapsedTime(true);
-            if (curTime == lastPoll)
+            if (lastPoll == curTime)
             {
                 return allEvents;
             }
