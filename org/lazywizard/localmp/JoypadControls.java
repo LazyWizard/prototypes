@@ -8,10 +8,13 @@ import com.fs.starfarer.api.combat.ShipCommand;
 import com.fs.starfarer.api.combat.ViewportAPI;
 import java.awt.Color;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Level;
 import org.lazywizard.lazylib.MathUtils;
 import org.lazywizard.lazylib.VectorUtils;
+import org.lazywizard.localmp.controllers.joypad.JoypadInputEvent;
+import org.lazywizard.localmp.controllers.joypad.JoypadMaster;
 import org.lazywizard.localmp.controllers.joypad.buttonmaps.Xbox360;
 import org.lwjgl.input.Controller;
 import org.lwjgl.input.Mouse;
@@ -24,7 +27,7 @@ import org.lwjgl.util.vector.Vector2f;
 public class JoypadControls implements ShipAIPlugin
 {
     private static final float VIRTUAL_POINTER_SPEED = 500f;
-    private static final boolean USE_TANK_CONTROLS = false;
+    private static final boolean USE_TANK_CONTROLS = true;
     private static boolean USE_VIRTUAL_MOUSE = false;
     private static final Map<Integer, Enum> BINDINGS = new HashMap<>();
     private final ShipAPI ship;
@@ -40,10 +43,10 @@ public class JoypadControls implements ShipAIPlugin
         BINDINGS.put(Xbox360.BUTTON_B, ShipCommand.TOGGLE_SHIELD_OR_PHASE_CLOAK);
         BINDINGS.put(Xbox360.BUTTON_X, ShipCommand.VENT_FLUX);
         BINDINGS.put(Xbox360.BUTTON_Y, ShipCommand.USE_SYSTEM);
-        BINDINGS.put(Xbox360.BUTTON_LB, ShipCommand.STRAFE_LEFT);
-        BINDINGS.put(Xbox360.BUTTON_RB, ShipCommand.STRAFE_RIGHT);
-        //BINDINGS.put(Xbox360.BUTTON_LB, ExtendedShipCommand.SELECT_GROUP_PREVIOUS);
-        //BINDINGS.put(Xbox360.BUTTON_RB, ExtendedShipCommand.SELECT_GROUP_NEXT);
+        //BINDINGS.put(Xbox360.BUTTON_LB, ShipCommand.STRAFE_LEFT);
+        //BINDINGS.put(Xbox360.BUTTON_RB, ShipCommand.STRAFE_RIGHT);
+        BINDINGS.put(Xbox360.BUTTON_LB, ExtendedShipCommand.SELECT_GROUP_PREVIOUS);
+        BINDINGS.put(Xbox360.BUTTON_RB, ExtendedShipCommand.SELECT_GROUP_NEXT);
         BINDINGS.put(Xbox360.BUTTON_BACK, ExtendedShipCommand.TOGGLE_VIRTUAL_MOUSE);
         //BINDINGS.put(Xbox360.BUTTON_LB, ShipCommand.TURN_LEFT);
         //BINDINGS.put(Xbox360.BUTTON_RB, ShipCommand.TURN_RIGHT);
@@ -157,85 +160,117 @@ public class JoypadControls implements ShipAIPlugin
         }
 
         // Update controller input
-        controller.poll();
-
-        // Axis handling, Y-axis will be flipped
-        float lx = controller.getXAxisValue(),
-                ly = -controller.getYAxisValue(),
-                rx = controller.getRXAxisValue(),
-                ry = -controller.getRYAxisValue();
-        // Tank controls, extremely awkward but supported
-        if (USE_TANK_CONTROLS)
+        Map<Controller, List<JoypadInputEvent>> allEvents = JoypadMaster.pollEvents();
+        if (!allEvents.containsKey(controller))
         {
-            if (Math.abs(lx) > controller.getXAxisDeadZone())
-            {
-                runCommand((lx > 0 ? ShipCommand.TURN_RIGHT : ShipCommand.TURN_LEFT));
-            }
-            if (Math.abs(ly) > controller.getYAxisDeadZone())
-            {
-                runCommand((ly > 0 ? ShipCommand.ACCELERATE : ShipCommand.ACCELERATE_BACKWARDS));
-            }
+            System.out.println("No events");
+            return;
         }
-        // Go towards point style controls
-        else
+
+        for (JoypadInputEvent event : allEvents.get(controller))
         {
-            Vector2f lAxis = new Vector2f(lx, ly);
-            float intendedFacing = VectorUtils.getFacing(lAxis);
-
-            // Turn towards point
-            if (Math.abs(lx) > controller.getXAxisDeadZone()
-                    || Math.abs(ly) > controller.getYAxisDeadZone())
+            if (event.isConsumed())
             {
-                // The difference in degrees between current facing and intended facing
-                float turnAmount = MathUtils.getShortestRotation(ship.getFacing(),
-                        intendedFacing);
+                continue;
+            }
 
-                // Stop turning if turn velocity is more than remaining turn
-                // TODO: This is written wrong, fix it
-                if (Math.abs(turnAmount) > ship.getAngularVelocity())
+            // Axis handling
+            if (event.isAxisEvent())
+            {
+                if (event.isLAxisEvent())
                 {
-                    runCommand(turnAmount > 0f ? ShipCommand.TURN_LEFT : ShipCommand.TURN_RIGHT);
+                    float lx = event.getAxisX(),
+                            ly = -event.getAxisY();
+                    // Tank controls, extremely awkward but supported
+                    if (USE_TANK_CONTROLS)
+                    {
+                        if (!event.isDeadZoneEvent())
+                        {
+                            if (Math.abs(lx) > controller.getXAxisDeadZone())
+                            {
+                                runCommand((lx > 0 ? ShipCommand.TURN_RIGHT : ShipCommand.TURN_LEFT));
+                            }
+                            if (Math.abs(ly) > controller.getYAxisDeadZone())
+                            {
+                                runCommand((ly > 0 ? ShipCommand.ACCELERATE : ShipCommand.ACCELERATE_BACKWARDS));
+                            }
+                        }
+                    }
+                    // Go towards point style controls
+                    else
+                    {
+                        Vector2f lAxis = new Vector2f(lx, ly);
+                        float intendedFacing = VectorUtils.getFacing(lAxis);
+
+                        // Turn towards point
+                        if (!event.isDeadZoneEvent())
+                        {
+                            // The difference in degrees between current facing and intended facing
+                            float turnAmount = MathUtils.getShortestRotation(ship.getFacing(),
+                                    intendedFacing);
+
+                            // Stop turning if turn velocity is more than remaining turn
+                            // TODO: This is written wrong, fix it
+                            if (Math.abs(turnAmount) > ship.getAngularVelocity())
+                            {
+                                runCommand(turnAmount > 0f ? ShipCommand.TURN_LEFT : ShipCommand.TURN_RIGHT);
+                            }
+                        }
+
+                        float currentDrift = VectorUtils.getFacing(ship.getVelocity());
+                        // Not heading in the same direction as our facing
+                        if (Math.abs(MathUtils.getShortestRotation(currentDrift, intendedFacing))
+                                > 90f)
+                        {
+                        }
+
+                        // TODO: Accellerate towards facing
+                        // Accelerate towards point (based on how far the stick is pushed)
+                        float accel = Math.min(1f, lAxis.length() * 1.1f);
+                        float curAccel = ship.getVelocity().length()
+                                / ship.getMutableStats().getMaxSpeed().getModifiedValue();
+                        if (!MathUtils.equals(accel, curAccel))
+                        {
+                            runCommand(accel > curAccel ? ShipCommand.ACCELERATE : ShipCommand.DECELERATE);
+                        }
+                    }
+                    event.consume();
+                }
+                else if (event.isRAxisEvent())
+                {
+                    float rx = event.getAxisX(),
+                            ry = -event.getAxisY();
+                    if (USE_VIRTUAL_MOUSE)
+                    {
+                        // Keep virtual mouse centered around ship
+                        mouseLoc.x += ship.getVelocity().x * amount;
+                        mouseLoc.y += ship.getVelocity().y * amount;
+
+                        // Virtual mouse pointer controls
+                        if (!event.isDeadZoneEvent())
+                        {
+                            mouseLoc.x += rx * VIRTUAL_POINTER_SPEED * amount;
+                            mouseLoc.y += ry * VIRTUAL_POINTER_SPEED * amount;
+                        }
+                    }
+                    else
+                    {
+                        mouseLoc.set(shipLoc.x + (rx * maxMouseDistance),
+                                shipLoc.y + (ry * maxMouseDistance));
+                    }
+
+                    event.consume();
                 }
             }
-
-            float currentDrift = VectorUtils.getFacing(ship.getVelocity());
-            // Not heading in the same direction as our facing
-            if (Math.abs(MathUtils.getShortestRotation(currentDrift, intendedFacing))
-                    > 90f)
+            // Button handling
+            else if (event.isButtonDownEvent())
             {
+                if (BINDINGS.containsKey(event.getButton()))
+                {
+                    runCommand(BINDINGS.get(event.getButton()));
+                    event.consume();
+                }
             }
-
-            // TODO: Accellerate towards facing
-            // Accelerate towards point (based on how far the stick is pushed)
-            float accel = Math.min(1f, lAxis.length() * 1.1f);
-            float curAccel = ship.getVelocity().length()
-                    / ship.getMutableStats().getMaxSpeed().getModifiedValue();
-            if (!MathUtils.equals(accel, curAccel))
-            {
-                runCommand(accel > curAccel ? ShipCommand.ACCELERATE : ShipCommand.DECELERATE);
-            }
-        }
-
-        if (USE_VIRTUAL_MOUSE)
-        {
-            // Keep virtual mouse centered around ship
-            mouseLoc.x += ship.getVelocity().x * amount;
-            mouseLoc.y += ship.getVelocity().y * amount;
-
-            // Virtual mouse pointer controls
-            if (Math.abs(rx) > controller.getRXAxisDeadZone())
-            {
-                mouseLoc.x += rx * VIRTUAL_POINTER_SPEED * amount;
-            }
-            if (Math.abs(ry) > controller.getRYAxisDeadZone())
-            {
-                mouseLoc.y += ry * VIRTUAL_POINTER_SPEED * amount;
-            }
-        }
-        else
-        {
-            mouseLoc.set(shipLoc.x + (rx * maxMouseDistance),
-                    shipLoc.y + (ry * maxMouseDistance));
         }
 
         // Keep virtual mouse within a certain range of the ship
@@ -252,15 +287,6 @@ public class JoypadControls implements ShipAIPlugin
         ship.getMouseTarget().set(mouseLoc);
         engine.addSmoothParticle(mouseLoc, ship.getVelocity(),
                 5f * view.getViewMult(), 1f, .25f, Color.CYAN);
-
-        // Button handling
-        for (Map.Entry<Integer, Enum> binding : BINDINGS.entrySet())
-        {
-            if (controller.isButtonPressed(binding.getKey()))
-            {
-                runCommand(binding.getValue());
-            }
-        }
     }
 
     @Override

@@ -13,11 +13,17 @@ import org.lazywizard.localmp.JoypadControls;
 
 public class ModPlugin extends BaseModPlugin
 {
+    private static final boolean ENABLE_JOYPAD_CONTROLS = false;
     private static final boolean OVERRIDE_ALL_AI = false;
 
     @Override
     public PluginPick<ShipAIPlugin> pickShipAI(FleetMemberAPI member, ShipAPI ship)
     {
+        if (!ENABLE_JOYPAD_CONTROLS)
+        {
+            return null;
+        }
+
         CombatEngineAPI engine = Global.getCombatEngine();
         if (OVERRIDE_ALL_AI || (engine != null && ship == engine.getPlayerShip()))
         {
