@@ -10,7 +10,6 @@ import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import org.apache.log4j.Level;
 import org.lazywizard.localmp.JoypadControls;
-import org.lazywizard.playerhq.PlayerHQCampaignPlugin;
 
 public class ModPlugin extends BaseModPlugin
 {
@@ -36,11 +35,5 @@ public class ModPlugin extends BaseModPlugin
         }
 
         return null;
-    }
-
-    @Override
-    public void onGameLoad()
-    {
-        Global.getSector().registerPlugin(new PlayerHQCampaignPlugin());
     }
 }
