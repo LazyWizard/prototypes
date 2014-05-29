@@ -9,12 +9,19 @@ import com.fs.starfarer.api.combat.ShipAIPlugin;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import org.apache.log4j.Level;
+import org.lazywizard.conversation.ConversationsModPlugin;
 import org.lazywizard.localmp.JoypadControls;
 
 public class ModPlugin extends BaseModPlugin
 {
     private static final boolean ENABLE_JOYPAD_CONTROLS = false;
     private static final boolean OVERRIDE_ALL_AI = false;
+
+    @Override
+    public void onApplicationLoad() throws Exception
+    {
+        new ConversationsModPlugin().onApplicationLoad();
+    }
 
     @Override
     public PluginPick<ShipAIPlugin> pickShipAI(FleetMemberAPI member, ShipAPI ship)
