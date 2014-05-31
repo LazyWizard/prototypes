@@ -4,14 +4,14 @@ import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.InteractionDialogAPI;
 import com.fs.starfarer.api.campaign.SectorEntityToken;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import org.apache.log4j.Level;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.lazywizard.conversation.ResponseStatusScript.Status;
+import org.lazywizard.conversation.ResponseScript.Visibility;
 
+// TODO: Move all JSON parsing into single method for easier debugging
 class Node
 {
     private final String text;
@@ -42,17 +42,42 @@ class Node
     class Response
     {
         private final String text, tooltip;
-        private final ResponseStatusScript status;
         private final String leadsTo;
-        private final OnChosenScript script;
+        private final ResponseScript script;
 
         Response(JSONObject data) throws JSONException
         {
             text = data.getString("text");
             leadsTo = data.optString("leadsTo", null);
-            tooltip = data.optString("mouseOverText");
-            status = null;
-            script = null;
+            tooltip = data.optString("tooltip", null);
+
+            String scriptPath = data.optString("responseScript", null);
+            if (scriptPath == null)
+            {
+                script = null;
+            }
+            else
+            {
+                ResponseScript tmp = null;
+
+                try
+                {
+                    tmp = (ResponseScript) Global.getSettings()
+                            .getScriptClassLoader().loadClass(scriptPath).newInstance();
+                }
+                catch (ClassNotFoundException ex)
+                {
+                    Global.getLogger(Response.class).log(Level.ERROR,
+                            "ResponseScript not found: " + scriptPath, ex);
+                }
+                catch (InstantiationException | IllegalAccessException ex)
+                {
+                    Global.getLogger(Response.class).log(Level.ERROR,
+                            "Failed to create ResponseScript: " + scriptPath, ex);
+                }
+
+                script = tmp;
+            }
         }
 
         void onChosen(SectorEntityToken talkingTo, InteractionDialogAPI dialog)
@@ -76,14 +101,14 @@ class Node
             return tooltip;
         }
 
-        Status getStatus()
+        Visibility getVisibility()
         {
-            if (status != null)
+            if (script != null)
             {
-                return status.getStatus();
+                return script.getVisibility();
             }
 
-            return ResponseStatusScript.Status.ENABLED;
+            return ResponseScript.Visibility.VISIBLE;
         }
 
         String getNodeLedTo()

@@ -9,9 +9,9 @@ import org.lazywizard.conversation.Conversations;
 public class TestConversation implements BaseCommand
 {
     @Override
-    public CommandResult runCommand(String args, CommandContext context)
+    public CommandResult runCommand(final String args, CommandContext context)
     {
-        Console.showMessage("Showing conversation...");
+        Console.showMessage("Showing conversation " + args + "...");
         Global.getSector().addScript(new EveryFrameScript()
         {
             private boolean isDone = false;
@@ -34,7 +34,7 @@ public class TestConversation implements BaseCommand
                 if (!isDone)
                 {
                     isDone = true;
-                    Conversations.showConversation("testConv", Global.getSector().getPlayerFleet());
+                    Conversations.showConversation(args, Global.getSector().getPlayerFleet());
                 }
             }
         });

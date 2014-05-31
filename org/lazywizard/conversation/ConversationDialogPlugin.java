@@ -1,30 +1,33 @@
 package org.lazywizard.conversation;
 
 import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.campaign.CampaignFleetAPI;
 import com.fs.starfarer.api.campaign.InteractionDialogAPI;
 import com.fs.starfarer.api.campaign.InteractionDialogPlugin;
 import com.fs.starfarer.api.campaign.OptionPanelAPI;
 import com.fs.starfarer.api.campaign.SectorEntityToken;
 import com.fs.starfarer.api.campaign.TextPanelAPI;
+import com.fs.starfarer.api.campaign.VisualPanelAPI;
 import com.fs.starfarer.api.combat.EngagementResultAPI;
 import java.awt.Color;
 import org.apache.log4j.Level;
 
 class ConversationDialogPlugin implements InteractionDialogPlugin
 {
+    private final Conversation conv;
     private final SectorEntityToken talkingTo;
     private final boolean devMode;
     private InteractionDialogAPI dialog;
     private TextPanelAPI text;
     private OptionPanelAPI options;
-    private final Conversation conv;
+    private VisualPanelAPI visual;
     private Node currentNode;
 
-    ConversationDialogPlugin(SectorEntityToken talkingTo, Conversation conv)
+    ConversationDialogPlugin(Conversation conv, SectorEntityToken talkingTo)
     {
+        this.conv = conv;
         this.talkingTo = talkingTo;
         devMode = Global.getSettings().isDevMode();
-        this.conv = conv;
     }
 
     @Override
@@ -33,6 +36,12 @@ class ConversationDialogPlugin implements InteractionDialogPlugin
         this.dialog = dialog;
         this.text = dialog.getTextPanel();
         this.options = dialog.getOptionPanel();
+        this.visual = dialog.getVisualPanel();
+
+        if (talkingTo instanceof CampaignFleetAPI)
+        {
+            visual.showPersonInfo(((CampaignFleetAPI) talkingTo).getCommander());
+        }
 
         goToNode(conv.getStartingNode());
     }
@@ -47,9 +56,9 @@ class ConversationDialogPlugin implements InteractionDialogPlugin
         // Dev mode = on, allow player to choose even disabled/hidden options
         if (devMode)
         {
-            switch (response.getStatus())
+            switch (response.getVisibility())
             {
-                case ENABLED:
+                case VISIBLE:
                     options.addOption(response.getText(), response, response.getTooltip());
                     break;
                 case DISABLED:
@@ -62,16 +71,16 @@ class ConversationDialogPlugin implements InteractionDialogPlugin
                     break;
                 default:
                     Global.getLogger(ConversationDialogPlugin.class).log(Level.ERROR,
-                            "Unsupported status: " + response.getStatus().name());
+                            "Unsupported status: " + response.getVisibility().name());
             }
 
             return;
         }
 
         // Dev mode = off, respect visibility status
-        switch (response.getStatus())
+        switch (response.getVisibility())
         {
-            case ENABLED:
+            case VISIBLE:
                 options.addOption(response.getText(), response, response.getTooltip());
                 break;
             case DISABLED:
@@ -80,7 +89,7 @@ class ConversationDialogPlugin implements InteractionDialogPlugin
                 break;
             default:
                 Global.getLogger(ConversationDialogPlugin.class).log(Level.ERROR,
-                        "Unsupported status: " + response.getStatus().name());
+                        "Unsupported status: " + response.getVisibility().name());
         }
     }
 
