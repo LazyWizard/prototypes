@@ -32,6 +32,7 @@ public class TestConversation implements BaseCommand
                 return CommandResult.ERROR;
             }
 
+            Console.showMessage("Reloaded conversations.");
             return CommandResult.SUCCESS;
         }
 
