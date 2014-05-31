@@ -1,10 +1,13 @@
 package org.lazywizard.conversation;
 
+import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.InteractionDialogAPI;
 import com.fs.starfarer.api.campaign.SectorEntityToken;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.log4j.Level;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.lazywizard.conversation.ResponseStatusScript.Status;
@@ -19,11 +22,10 @@ class Node
         text = data.getString("text");
         responses = new ArrayList<>();
 
-        JSONObject rData = data.getJSONObject("responses");
-        for (Iterator keys = rData.keys(); keys.hasNext();)
+        JSONArray rData = data.getJSONArray("responses");
+        for (int x = 0; x < rData.length(); x++)
         {
-            String responseId = (String) keys.next();
-            responses.add(new Response(responseId, rData.getJSONObject(responseId)));
+            responses.add(new Response(rData.getJSONObject(x)));
         }
     }
 
@@ -39,23 +41,25 @@ class Node
 
     class Response
     {
-        private final String responseId, text, tooltip;
+        private final String text, tooltip;
         private final ResponseStatusScript status;
         private final String leadsTo;
         private final OnChosenScript script;
 
-        Response(String responseId, JSONObject data) throws JSONException
+        Response(JSONObject data) throws JSONException
         {
-            this.responseId = responseId;
             text = data.getString("text");
-            leadsTo = JSONParser.getObjectOrNull(data, "leadsTo", String.class);
-            tooltip = JSONParser.getObjectOrNull(data, "mouseOverText", String.class);
+            leadsTo = data.optString("leadsTo", null);
+            tooltip = data.optString("mouseOverText");
             status = null;
             script = null;
         }
 
         void onChosen(SectorEntityToken talkingTo, InteractionDialogAPI dialog)
         {
+            Global.getLogger(Response.class).log(Level.DEBUG,
+                    "Chose response: \"" + text + "\"\nLeads to: " + leadsTo);
+
             if (script != null)
             {
                 script.onChosen(talkingTo, dialog);
