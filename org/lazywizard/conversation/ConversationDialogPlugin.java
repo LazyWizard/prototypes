@@ -11,6 +11,8 @@ import com.fs.starfarer.api.campaign.VisualPanelAPI;
 import com.fs.starfarer.api.combat.EngagementResultAPI;
 import java.awt.Color;
 import org.apache.log4j.Level;
+import org.lazywizard.conversation.Conversation.Node;
+import org.lazywizard.conversation.Conversation.Node.Response;
 
 class ConversationDialogPlugin implements InteractionDialogPlugin
 {
@@ -51,7 +53,7 @@ class ConversationDialogPlugin implements InteractionDialogPlugin
         dialog.dismiss();
     }
 
-    private void checkAddResponse(Node.Response response)
+    private void checkAddResponse(Response response)
     {
         // Dev mode = on, allow player to choose even disabled/hidden options
         if (devMode)
@@ -106,7 +108,7 @@ class ConversationDialogPlugin implements InteractionDialogPlugin
         text.addParagraph(node.getText());
         options.clearOptions();
 
-        for (Node.Response response : node.getResponses())
+        for (Response response : node.getResponses())
         {
             checkAddResponse(response);
         }
@@ -115,7 +117,7 @@ class ConversationDialogPlugin implements InteractionDialogPlugin
     @Override
     public void optionSelected(String optionText, Object optionData)
     {
-        Node.Response response = (Node.Response) optionData;
+        Response response = (Response) optionData;
         text.addParagraph(response.getText(), Color.CYAN);
         response.onChosen(talkingTo, dialog);
         goToNode(conv.getNodes().get(response.getNodeLedTo()));

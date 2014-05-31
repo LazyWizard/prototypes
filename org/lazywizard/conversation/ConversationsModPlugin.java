@@ -7,6 +7,6 @@ public class ConversationsModPlugin extends BaseModPlugin
     @Override
     public void onApplicationLoad() throws Exception
     {
-        Conversations.reloadConversations();
+        ConversationMaster.reloadConversations();
     }
 }
