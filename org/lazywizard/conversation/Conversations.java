@@ -3,8 +3,10 @@ package org.lazywizard.conversation;
 import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.SectorEntityToken;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Level;
 import org.json.JSONArray;
@@ -75,6 +77,16 @@ public class Conversations
         }
     }
 
+    public static List<String> getLoadedConversations()
+    {
+        return new ArrayList<>(conversations.keySet());
+    }
+
+    public static boolean hasConversation(String id)
+    {
+        return conversations.containsKey(id);
+    }
+
     public static void showConversation(String id, SectorEntityToken talkingTo)
     {
         if (!conversations.containsKey(id))
@@ -83,8 +95,7 @@ public class Conversations
         }
 
         Global.getSector().getCampaignUI().showInteractionDialog(
-                new ConversationDialogPlugin(talkingTo,
-                        conversations.get(id)), talkingTo);
+                new ConversationDialogPlugin(conversations.get(id), talkingTo), talkingTo);
     }
 
     private Conversations()
