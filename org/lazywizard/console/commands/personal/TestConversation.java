@@ -2,16 +2,47 @@ package org.lazywizard.console.commands.personal;
 
 import com.fs.starfarer.api.EveryFrameScript;
 import com.fs.starfarer.api.Global;
+import java.io.IOException;
+import org.json.JSONException;
 import org.lazywizard.console.BaseCommand;
+import org.lazywizard.console.CommonStrings;
 import org.lazywizard.console.Console;
-import org.lazywizard.conversation.Conversations;
+import org.lazywizard.conversation.ConversationMaster;
 
 public class TestConversation implements BaseCommand
 {
     @Override
-    public CommandResult runCommand(final String args, CommandContext context)
+    public CommandResult runCommand(String args, CommandContext context)
     {
-        Console.showMessage("Showing conversation " + args + "...");
+        if (context != CommandContext.CAMPAIGN_MAP)
+        {
+            Console.showMessage(CommonStrings.ERROR_CAMPAIGN_ONLY);
+            return CommandResult.WRONG_CONTEXT;
+        }
+
+        if ("reload".equalsIgnoreCase(args))
+        {
+            try
+            {
+                ConversationMaster.reloadConversations();
+            }
+            catch (IOException | JSONException ex)
+            {
+                Console.showException("Failed to reload conversations:", ex);
+                return CommandResult.ERROR;
+            }
+
+            return CommandResult.SUCCESS;
+        }
+
+        final String conv = (args.isEmpty() ? "testConv" : args);
+        if (!ConversationMaster.hasConversation(conv))
+        {
+            Console.showMessage("No conversation with ID \"" + conv + "\" loaded!");
+            return CommandResult.ERROR;
+        }
+
+        Console.showMessage("Showing conversation " + conv + "...");
         Global.getSector().addScript(new EveryFrameScript()
         {
             private boolean isDone = false;
@@ -34,7 +65,8 @@ public class TestConversation implements BaseCommand
                 if (!isDone)
                 {
                     isDone = true;
-                    Conversations.showConversation(args, Global.getSector().getPlayerFleet());
+                    ConversationMaster.showConversation(conv,
+                            Global.getSector().getPlayerFleet());
                 }
             }
         });

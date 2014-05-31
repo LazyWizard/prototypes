@@ -5,7 +5,6 @@ import com.fs.starfarer.api.campaign.SectorEntityToken;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Level;
@@ -13,41 +12,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Conversations
+public class ConversationMaster
 {
     // TODO: Split into own mod and change mod id
     private static final String MOD_ID = "lw_personal";
     private static final String CSV_PATH = "data/conv/conversations.csv";
     private static final Map<String, Conversation> conversations = new HashMap<>();
-
-    private static Conversation createConversation(String filePath) throws IOException, JSONException
-    {
-        JSONObject rawData = Global.getSettings().loadJSON(filePath);
-        String startNode = rawData.getString("startingNode");
-        Node startingNode = null;
-
-        Map<String, Node> nodes = new HashMap<>();
-        JSONObject nodeData = rawData.getJSONObject("nodes");
-        for (Iterator keys = nodeData.keys(); keys.hasNext();)
-        {
-            String id = (String) keys.next();
-            JSONObject data = nodeData.getJSONObject(id);
-            Node node = new Node(id, data);
-            nodes.put(id, node);
-
-            if (startNode.equals(id))
-            {
-                startingNode = node;
-            }
-        }
-
-        if (startingNode == null)
-        {
-            throw new RuntimeException("No startingNode found in " + filePath);
-        }
-
-        return new Conversation(nodes, startingNode);
-    }
 
     // Only throws Exceptions if CSV is malformed, not on errors in individual JSON files
     public static void reloadConversations() throws IOException, JSONException
@@ -62,16 +32,16 @@ public class Conversations
             try
             {
                 conversations.put(row.getString("id"),
-                        createConversation(row.getString("filePath")));
+                        new Conversation(row.getString("filePath")));
             }
             catch (IOException ex)
             {
-                Global.getLogger(Conversations.class).log(Level.ERROR,
+                Global.getLogger(ConversationMaster.class).log(Level.ERROR,
                         "Unable to find covnersation " + row.toString(), ex);
             }
             catch (JSONException ex)
             {
-                Global.getLogger(Conversations.class).log(Level.ERROR,
+                Global.getLogger(ConversationMaster.class).log(Level.ERROR,
                         "Unable to create conversation " + row.toString(), ex);
             }
         }
@@ -98,7 +68,7 @@ public class Conversations
                 new ConversationDialogPlugin(conversations.get(id), talkingTo), talkingTo);
     }
 
-    private Conversations()
+    private ConversationMaster()
     {
     }
 }
