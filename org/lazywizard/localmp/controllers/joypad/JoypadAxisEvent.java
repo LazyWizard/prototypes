@@ -187,6 +187,12 @@ class JoypadAxisEvent extends BaseJoypadInputEvent
     }
 
     @Override
+    public boolean isButtonHeldEvent()
+    {
+        return false;
+    }
+
+    @Override
     public boolean isButtonUpEvent()
     {
         return false;

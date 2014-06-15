@@ -12,7 +12,14 @@ import org.lwjgl.input.Controllers;
 public class JoypadMaster
 {
     private static Map<Controller, List<JoypadInputEvent>> allEvents;
+    private static final Map<Integer, JoypadButtonHeldEvent> heldButtons = new HashMap<>(),
+            heldNext = new HashMap<>();
     private static float lastPoll = -1f;
+
+    static void reset()
+    {
+        heldButtons.clear();
+    }
 
     public static Map<Controller, List<JoypadInputEvent>> pollEvents()
     {
@@ -53,6 +60,16 @@ public class JoypadMaster
             else
             {
                 events = allEvents.get(source);
+            }
+
+            if (tmp.isButtonDownEvent())
+            {
+                heldNext.put(tmp.getButton(), new JoypadButtonHeldEvent(tmp));
+            }
+            else if (tmp.isButtonUpEvent())
+            {
+                heldNext.remove(tmp);
+                heldButtons.remove(tmp);
             }
 
             events.add(tmp);

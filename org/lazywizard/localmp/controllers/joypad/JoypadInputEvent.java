@@ -23,6 +23,7 @@ public interface JoypadInputEvent
 
     public boolean isButtonEvent();
     public boolean isButtonDownEvent();
+    public boolean isButtonHeldEvent();
     public boolean isButtonUpEvent();
     public int getButton();
 
