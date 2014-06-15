@@ -1,25 +1,19 @@
 package org.lazywizard.localmp.controllers.joypad;
 
 import org.lwjgl.input.Controller;
-import org.lwjgl.input.Controllers;
 
-// TODO: Throw exception when acting on consumed events
-class JoypadButtonEvent extends BaseJoypadInputEvent
+class JoypadButtonHeldEvent extends BaseJoypadInputEvent
 {
     private final Controller controller;
     private final long nanoTime;
-    private final boolean isButtonEvent, buttonState;
     private final int buttonIndex;
     private boolean isConsumed = false;
 
-    JoypadButtonEvent()
+    JoypadButtonHeldEvent(BaseJoypadInputEvent orig)
     {
-        this.controller = Controllers.getEventSource();
-        this.nanoTime = Controllers.getEventNanoseconds();
-
-        this.isButtonEvent = Controllers.isEventButton();
-        this.buttonIndex = Controllers.getEventControlIndex();
-        this.buttonState = Controllers.getEventButtonState();
+        this.controller = orig.getController();
+        this.nanoTime = orig.getEventNanoTime();
+        this.buttonIndex = orig.getButton();
     }
 
     @Override
@@ -115,20 +109,19 @@ class JoypadButtonEvent extends BaseJoypadInputEvent
     @Override
     public boolean isButtonDownEvent()
     {
-        return buttonState;
+        return false;
     }
-
 
     @Override
     public boolean isButtonHeldEvent()
     {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isButtonUpEvent()
     {
-        return !buttonState;
+        return false;
     }
 
     @Override
@@ -152,6 +145,6 @@ class JoypadButtonEvent extends BaseJoypadInputEvent
     @Override
     boolean isValidEvent()
     {
-        return isButtonEvent; //!isDeadZoneEvent && (isAxisEvent || isButtonEvent || isDPadEvent);
+        return true;
     }
 }
