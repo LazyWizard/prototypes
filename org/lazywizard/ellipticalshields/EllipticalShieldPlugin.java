@@ -15,9 +15,16 @@ import static org.lwjgl.opengl.GL11.*;
 // TODO: Add public hooks to retrieve/modify the shields of specific ships
 public class EllipticalShieldPlugin implements EveryFrameCombatPlugin
 {
+    private static final boolean ENABLED = false;
+
     @Override
     public void advance(float amount, List<InputEventAPI> events)
     {
+        if (!ENABLED)
+        {
+            return;
+        }
+
         CombatEngineAPI engine = Global.getCombatEngine();
         if (engine == null || engine.isPaused())
         {
